@@ -21,22 +21,14 @@ promptUser()
 //Ensure that it's bigger
 .then(checkCoverImage)
 //Process image, get all the pixels with binary values for colours.
-.then(processImage)
-.then(console.log)
+.then(prepareCoverImage)
+//check it out
+.then(prepareEmbedFile)
 .catch(
 	function(error){
 		console.log("Error handling!");
 		console.log(error);
 	})
-
-
-
-
-
-
-
-
-
 
 
 
@@ -107,7 +99,8 @@ function checkCoverImage(interPromisePackage){
 			var fileStats = fs.statSync(filePath);
 			var fileSize = fileStats.size;
 				if(fileSize > interPromisePackage.coverImageSizeReq){
-					resolve("Success!");
+					console.log("File is of satisfactory size")
+					resolve(interPromisePackage);
 				}
 				else {
 					reject("Cover image is too small to embed your message, coverImage is size: "+ interPromisePackage.coverImageSizeReq + " embed image is"+ fileSize+ "Please run again")
@@ -122,37 +115,48 @@ function checkCoverImage(interPromisePackage){
 
 
 
-
-function processImage(interPromisePackage){
+function prepareCoverImage(interPromisePackage){
 	return new Promise(function(resolve,reject){
 		var pixelArray = new Array();
-		var image = new Jimp(interPromisePackage.coverImageFilePath, function (err, image) {  
-		   	image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
-		   	    // x, y is the position of this pixel on the image 
-		   	    // idx is the position start position of this rgba tuple in the bitmap Buffer 
-		   	    // this is the image 
-		   	 
-		   	    var red = this.bitmap.data[idx];
-		   	    var green = this.bitmap.data[idx+1];
-		   	    var blue = this.bitmap.data[idx+2];
-		   	    var alpha = this.bitmap.data[idx+3];
-		   	 	
-		   	 	// console.log(this.bitmap.data[idx])
-		   	  //   console.log("X:"+x+"Y:"+y+" red: " + red +" green: " + green + " blue: " + blue + " alpha: " +alpha)
-		   	  //   console.log(Jimp.intToRGBA(image.getPixelColor(x,y)));
-		   	    var color = Jimp.intToRGBA(image.getPixelColor(x,y));
-		   	    // console.log(Jimp.rgbaToInt(color.r,color.b,color.b,color.a));
+			var filePath = interPromisePackage.coverImageFilePath;
+			
+			var image = new Jimp(interPromisePackage.coverImageFilePath, function (err, image) {  
+			   	image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
+			   	    // x, y is the position of this pixel on the image 
+			   	    // idx is the position start position of this rgba tuple in the bitmap Buffer 
+			   	    // this is the image 
+			   	 
+			   	    var red = this.bitmap.data[idx];
+			   	    var green = this.bitmap.data[idx+1];
+			   	    var blue = this.bitmap.data[idx+2];
+			   	    var alpha = this.bitmap.data[idx+3];
+			   	 	
+			   	 	// console.log(this.bitmap.data[idx])
+			   	  //   console.log("X:"+x+"Y:"+y+" red: " + red +" green: " + green + " blue: " + blue + " alpha: " +alpha)
+			   	  //   console.log(Jimp.intToRGBA(image.getPixelColor(x,y)));
+			   	    var color = Jimp.intToRGBA(image.getPixelColor(x,y));
+			   	    // console.log(Jimp.rgbaToInt(color.r,color.b,color.b,color.a));
 
-		   	    //convert to binary
-		   	    var pixelObject = {x: x, y: y, red: red, green: green, blue: blue, redBin: ayb.decToBin(red), greenBin: ayb.decToBin(green), blueBin: ayb.decToBin(blue)}
-		   	    pixelArray.push(pixelObject)
+			   	    //convert to binary
+			   	    var pixelObject = {x: x, y: y, red: red, green: green, blue: blue, redBin: ayb.decToBin(red), greenBin: ayb.decToBin(green), blueBin: ayb.decToBin(blue)}
+			   	    //console.log(pixelObject);
+			   	    pixelArray.push(pixelObject)
 
-	
+		
 
 
 
-		   	});
-		});
-		pixelArray
+			   	});
+			});
+			interPromisePackage.pixelArray = pixelArray;
+			resolve(interPromisePackage);
+		})
+}
+
+function prepareEmbedFile(interPromisePackage){
+	return new Promise(function(resolve,reject){
+		//Get the file
+
+		//Convert to buffer
 	})
 }
