@@ -8,7 +8,9 @@ sTego
 
 sTego is a command line application built on JavaScript & Node.js to hide and reveal files from within images using LSB steganography (in tandem with AES-256-CTR encryption <i>for that extra kick</i>).
 
-![enter image description here](https://raw.githubusercontent.com/tratnayake/sTego/master/misc/terminal.png)
+<p align="center">
+![Check out those cool multi-coloured prompts](https://raw.githubusercontent.com/tratnayake/sTego/master/misc/terminal.png)
+</p>
 
 **What does that mean?**
 Do you want to send secret messages to a ~~backdoor~~ friend, but you're afraid of it being deciphered?
