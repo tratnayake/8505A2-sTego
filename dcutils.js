@@ -13,6 +13,9 @@ var BitArray = require('node-bitarray')
 var exports = module.exports;
 var filesize = require("file-size");
 var dcimage = require("./dcimage")
+var crypto = require('crypto'),
+    algorithm = 'aes-256-ctr'
+
 
 
 
@@ -81,7 +84,7 @@ exports.stegoImage = function(ipp){
 			 }
 
 			 //Write the file
-			 image.write(ipp.outputFileName);
+			 image.write("./stegodImages/"+ipp.outputFileName);
 
 			 
 		});
@@ -182,9 +185,14 @@ exports.revealSecretImage = function(ipp){
 			  var buff = new Buffer(byteArray);
 			  // console.log(buff);
 
+			 //DECRYPT
+			 
+			  var decipher = crypto.createDecipher(algorithm,ipp.decryptionPassword);
+			  var dec = Buffer.concat([decipher.update(buff) , decipher.final()]);
+
 			   console.log("Write file");
 			  //DEBUG: console.log(ipp);
-			  fs.writeFileSync('./output/'+fileName,buff,'binary');
+			  fs.writeFileSync('./output/'+fileName,dec,'binary');
 			   //DEBUG:console.log("DONE!");
 			   resolve('The finished file has been written to: /output/'+fileName)
 

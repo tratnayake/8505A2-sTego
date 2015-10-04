@@ -10,11 +10,19 @@ var BitArray = require('node-bitarray')
 var exports = module.exports;
 var filesize = require("file-size");
 var dcutils = require("./dcutils");
+var crypto = require('crypto'),
+    algorithm = 'aes-256-ctr'
 
 
-exports.fileToBinary = function(filePath){
+exports.fileToBinary = function(filePath,encryptionPassword){
 	var data = fs.readFileSync(filePath)
-	var bits = BitArray.fromBuffer(data);
+	
+	//encrypt
+	var cipher = crypto.createCipher(algorithm,encryptionPassword)
+	var crypted = Buffer.concat([cipher.update(data),cipher.final()]);
+
+
+	var bits = BitArray.fromBuffer(crypted);
 	var bitArray = bits.join("");
 	return bitArray;
 

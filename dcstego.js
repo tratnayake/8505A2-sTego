@@ -12,6 +12,8 @@ var filesize = require("file-size");
 var dcimage = require("./dcimage")
 var dcutils = require("./dcutils");
 var helpers = require("./helpers")
+var crypto = require('crypto'),
+    algorithm = 'aes-256-ctr'
 
 
 
@@ -22,7 +24,7 @@ if(process.argv.length > 2){
 		processArgs()
 		.then(processFiles)
 		.then(craftHeader)
-		.then(enforceSizeConstraint)
+		.then(enforceConstraint)
 		.then(prepData)
 		.then(dcutils.stegoImage)
 		.catch(
@@ -60,7 +62,7 @@ else{
 	.then(processArgs)
 	.then(processFiles)
 	.then(craftHeader)
-	.then(enforceSizeConstraint)
+	.then(enforceConstraint)
 	.then(prepData)
 	.then(dcutils.stegoImage)
 	.catch(
@@ -89,6 +91,10 @@ function promptChoice(){
 				      outputFileName:{
 				      	description: 'Please enter the name you would like the output file to have',
 				      	required: true,
+				      },
+				      encryptionPassword:{
+				      	description: 'Message will be encrypted with AES-256-CTF encryption. Please enter a password to decrypt with',
+				      	required: true,
 				      }
 				    }
 				  };
@@ -96,6 +102,7 @@ function promptChoice(){
 					process.argv[3] = result.embedFilePath;
 					process.argv[4] = result.coverFilePath;
 					process.argv[5] = result.outputFileName;
+					process.argv[6] = result.encryptionPassword;
 					// var interPromisePackage = new Object({choice: result.choice})
 					resolve(process.argv);
 				})	
@@ -108,6 +115,7 @@ function processRevealArgs(){
 	return new Promise(function(resolve,reject){
 		//DEBUG: console.log("Input are " + process.argv)
 		var secretImageFilePath = process.argv[3];
+		var decryptionPassword = process.argv[4];
 
 
 		//Craft the ipp
@@ -119,7 +127,7 @@ function processRevealArgs(){
 		// 	outputFileName: secretImage.bmp
 		// }
 
-		var ipp = new Object({secretImageFilePath: secretImageFilePath,});
+		var ipp = new Object({secretImageFilePath: secretImageFilePath, decryptionPassword: decryptionPassword});
 		//console.log(ipp);
 		//console.log(ipp);
 		resolve(ipp);
@@ -135,6 +143,7 @@ function processArgs(){
 		var embedFilePath = process.argv[3];
 		var coverFilePath = process.argv[4];
 		var outputFileName = process.argv[5];
+		var encryptionPassword = process.argv[6];
 
 		//Craft the ipp
 		//Object: 
@@ -145,7 +154,7 @@ function processArgs(){
 		// 	outputFileName: secretImage.bmp
 		// }
 
-		var ipp = new Object({embedFilePath: embedFilePath, coverFilePath: coverFilePath, outputFileName: outputFileName});
+		var ipp = new Object({embedFilePath: embedFilePath, coverFilePath: coverFilePath, outputFileName: outputFileName, encryptionPassword: encryptionPassword});
 		//DEBUG: console.log(ipp);
 
 		resolve(ipp);
@@ -163,6 +172,11 @@ function processFiles(ipp){
 		//DBUG: console.log("processEmbedFile()");
 		var embedfilePath = ipp.embedFilePath;
 		var coverFilePath = ipp.coverFilePath;
+
+		//Check that the coverFile is of type BMP
+		if(path.extname(ipp.coverFilePath) != ".bmp"){
+			reject("Cover file must be of type .BMP");
+		}
 		
 		//console.log(filePath);
 		//Get the file size, if the file exists
@@ -181,7 +195,7 @@ function processFiles(ipp){
 		}
 
 		//Break the file down into binary
-		ipp.embedFileData = helpers.fileToBinary(ipp.embedFilePath);
+		ipp.embedFileData = helpers.fileToBinary(ipp.embedFilePath, ipp.encryptionPassword);
 		resolve(ipp);
 		
 
@@ -203,10 +217,12 @@ function craftHeader(ipp){
 	})
 }
 
-function enforceSizeConstraint(ipp){
+function enforceConstraint(ipp){
 	return new Promise(function(resolve,reject){
 		//DEBUG: console.log(ipp);
-		ipp.coverImage
+		
+	
+
 		var image = new Jimp(ipp.coverFilePath, function (err, image) {
 			//Number of bits that picture can fit
 			//Numher of bits X pixels * Y pixels * 3 color channels each.
@@ -214,8 +230,7 @@ function enforceSizeConstraint(ipp){
 			var totalDataBits = (image.bitmap.height * image.bitmap.width) *3
 			var totalDataBytes = totalDataBits * 0.125;
 			
-			
-
+						
 			console.log("File size provided is " + filesize(ipp.embedFileSize).human() +"and within limits");
 			if (ipp.embedFileSize <= totalDataBytes){
 				resolve(ipp);
@@ -235,6 +250,23 @@ function enforceSizeConstraint(ipp){
 function prepData(ipp){
 	return new Promise(function(resolve,reject){
 		var data = ipp.headerData + ipp.embedFileData;
+		console.log(data);
+		console.log(typeof(data));
+
+		//Encrypt
+		// var cipher = crypto.createCipher(algorithm,password)
+		// var crypted = cipher.update(data,'binary','binary')
+		// crypted += cipher.final('binary');
+		// console.log(crypted);
+		// console.log(typeof(crypted));
+
+
+		//Decrypt
+		// var decipher = crypto.createDecipher(algorithm,password)
+		// var dec = decipher.update(crypted,'binary','binary')
+		// dec += decipher.final('binary');
+		// console.log(dec);
+
 		ipp.writeData = data;
 		//DEBUG: console.log("Write data is");
 		//DEBUG: console.log(ipp.writeData);

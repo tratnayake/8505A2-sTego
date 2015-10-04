@@ -6,7 +6,7 @@ sTego
 
 </note>
 
-sTego is a command line application built on JavaScript & Node.js to hide and reveal files from within images using LSB steganography.
+sTego is a command line application built on JavaScript & Node.js to hide and reveal files from within images using LSB steganography (in tandem with AES-256-CTR encryption <i>for that extra kick</i>).
 
 **What does that mean?**
 Do you want to send secret messages to a ~~backdoor~~ friend, but you're afraid of it being deciphered?
@@ -48,10 +48,10 @@ Example: `node dcstego.js secretImage.bmp`
 
 Features
 -------------
+ - Encryption! All messages are further encrypted using AES-256-CTR provided by the node.js CRYPTO module.
  - Amazing Efficiency! You can store 3 bits of information for each pixel in a cover image!
  - Cool Prompts! Multi-coloured terminal prompts, so you don't get confused by a non GUI interface
 
 
 To-Do
 ------
-- Encrypt messages
