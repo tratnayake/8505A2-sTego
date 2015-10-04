@@ -32,8 +32,8 @@ First install dependencies `npm install`
 
 1. Command Line Arguments:
 **Hiding An Image**
-Format: `node dcstego.js <embedFile> <coverImage> <outputFile>`
-Example: ` node dcstego.js text.txt ./images/coverImage.bmp secretImage.bmp`
+Format: `node dcstego.js <embedFile> <coverImage> <outputFile> <encryptionKey>`
+Example: ` node dcstego.js text.txt ./images/coverImage.bmp secretImage.bmp password`
 
 
 	**Revealing An Image**
