@@ -9,6 +9,9 @@ var binary = require('binary');
 var BitArray = require('node-bitarray')
 var exports = module.exports;
 var filesize = require("file-size");
+var dcutils = require("./dcutils");
+
+
 
 
 //MAIN:
@@ -17,9 +20,8 @@ processArgs()
 .then(processFiles)
 .then(craftHeader)
 .then(enforceSizeConstraint)
-// .then(prepData)
-// .then(stegoImage)
-//.then(unpack)
+.then(prepData)
+.then(dcutils.stegoImage)
 .catch(
 	function(error){
 		console.log("ERROR HANDLING");
@@ -137,13 +139,21 @@ function enforceSizeConstraint(ipp){
 			//Number of bits that picture can fit
 			//Numher of bits X pixels * Y pixels * 3 color channels each.
 
-			var totalData = (image.bitmap.height * image.bitmap.width) *3
-			console.log("Height: " + image.bitmap.height);
-			console.log("Width: " + image.bitmap.width);
-			console.log("Max size is " + totalData + "bits");
-			console.log(filesize(totalData).human());
+			var totalDataBits = (image.bitmap.height * image.bitmap.width) *3
+			var totalDataBytes = totalDataBits * 0.125;
+			
+			
 
-			console.log("File size provided is " + filesize(ipp.embedFileSize).human());
+			console.log("File size provided is " + filesize(ipp.embedFileSize).human() +"and within limits");
+			if (ipp.embedFileSize <= totalDataBytes){
+				resolve(ipp);
+			}
+			else{
+				console.log("Height: " + image.bitmap.height);
+				console.log("Width: " + image.bitmap.width);
+				console.log("Max size is " + totalDataBits + "bits or " + totalDataBytes + "bytes");
+				reject ("File size too big!");
+			}
 		})
 	})
 }
@@ -161,107 +171,9 @@ function prepData(ipp){
 }
 
 //5. Perform steganography.
-//	 For each pixel in the picture, into the last bit of
-function stegoImage(ipp){
-	return new Promise(function(resolve,reject){
-		var image = new Jimp(ipp.coverFilePath, function (err, image) {
-
-			counter = 0;
-		    // this is the image 
-		    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
-		        // x, y is the position of this pixel on the image 
-		        // idx is the position start position of this rgba tuple in the bitmap Buffer 
-		        // this is the image 
-		     
-		        var red = this.bitmap.data[idx];
-		        var green = this.bitmap.data[idx+1];
-		        var blue = this.bitmap.data[idx+2];
-		        //var alpha = this.bitmap.data[idx+3];
-
-		        //Switch out the LSB for your value
-
-		        //Write red pixel first
-		        
-		  
-		        if(counter < ipp.writeData.length){
-		        	var pixel = prepPixel(red,green,blue);
-		        	//There's still stuff to write in the data.
-		        	console.log("RED to write: " + ipp.writeData[counter]);
-		        	pixel.redBinNew = pixel.redBin.slice(0,7) + ipp.writeData[counter];
-		        	var colorInt = ayb.binToDec(pixel.redBinNew);
-		        	this.bitmap.data[idx] = colorInt;
-		        	console.log("Operation #: " + counter + " X: " + x + " Y: " + y + " red changed to " + colorInt + "with binary: " + pixel.redBinNew);
-		        	counter++;
-
-		        }
-		        if(counter < ipp.writeData.length){
-		        	var pixel = prepPixel(red,green,blue);
-		        	//There's still stuff to write in the data.
-		        	console.log("GREEN to write: " + ipp.writeData[counter]);
-		        	pixel.greenBinNew = pixel.greenBin.slice(0,7) + ipp.writeData[counter];
-		        	var colorInt = ayb.binToDec(pixel.greenBinNew);
-		        	this.bitmap.data[idx+1] = colorInt;
-		        	console.log("Operation #: " + counter + " X: " + x + " Y: " + y + " green changed to " + colorInt + "with binary: " + pixel.greenBinNew);
-		        	counter++;
-		        }
-		        if(counter < ipp.writeData.length){
-		        	var pixel = prepPixel(red,green,blue);
-		        	//There's still stuff to write in the data.
-		        	console.log("BLUE to write: " + ipp.writeData[counter]);
-		        	pixel.blueBinNew = pixel.blueBin.slice(0,7) + ipp.writeData[counter];
-		        	var colorInt = ayb.binToDec(pixel.blueBinNew);
-		        	this.bitmap.data[idx+2] = colorInt;
-		        	console.log("Operation #: " + counter + " X: " + x + " Y: " + y + " blue changed to " + colorInt + "with binary: " + pixel.blueBin);
-		        	counter++;
-		        }
-		        
 
 
-		     
-		        // rgba values run from 0 - 255 
-		        // e.g. this.bitmap.data[idx] = 0; // removes red from this pixel 
-		    });
-			//Check to make sure the number of bit operations ==  the number of bits that there were to write
-			 if(counter == (ipp.writeData.length)){
-			 	console.log("Counter: " + counter + " There were " + ipp.writeData.length + " bits to write");
-			 }
-			 else{
-			 	reject(console.log("Counter: " + counter + " There were " + ipp.writeData.length + " bits to write"));
-			 }
 
-			 //Write the file
-			 image.write(ipp.outputFileName);
-
-			 
-		});
-	})
-}
-
-function prepPixel(red,green,blue){
-	var pixel = new Object({red: red, green: green, blue: blue});
-
-	//Convert all the colours to binary
-	var redBin = ayb.decToBin(red);
-	var greenBin = ayb.decToBin(green);
-	var blueBin = ayb.decToBin(blue);
-
-	var binaryArray = [redBin,greenBin,blueBin];
-	for (var i in binaryArray){
-		bin = binaryArray[i]
-		if (bin.length < 8){
-			var gap = 8 - bin.length;
-			binaryArray[i] = pad(8,bin,'0');
-		}
-	}
-
-	pixel.redBin = binaryArray[0];
-	pixel.greenBin = binaryArray[1];
-	pixel.blueBin = binaryArray[2];
-
-	
-	return pixel;
-	
-}
 
 function processSecretImage(ipp){
 	return new Promise(function(resolve,reject){
@@ -339,20 +251,27 @@ function unpackBitstream(ipp){
 	})
 }
 
-exports.fileToBinary = function(filePath){
-	var data = fs.readFileSync(filePath)
-	var bits = BitArray.fromBuffer(data);
-	var bitArray = bits.join("");
-	return bitArray;
+function processRevealArgs(){
+	return new Promise(function(resolve,reject){
+		var secretImageFilePath = process.argv[2];
 
 
+		//Craft the ipp
+		//Object: 
+		//ipp
+		// {
+		// 	embedFilePath: text.txt,
+		// 	coverFilePath: ./images/coverFile.bmp,
+		// 	outputFileName: secretImage.bmp
+		// }
+
+		var ipp = new Object({secretImageFilePath: secretImageFilePath,});
+		//console.log(ipp);
+		resolve(ipp);
+	})
 }
 
-exports.stringToBinary = function(string){
-	var data = new Buffer(string);
-	var bits = BitArray.fromBuffer(data);
-	var bitArray = bits.join("");
-	return bitArray;
-}
+	
+
 
 
