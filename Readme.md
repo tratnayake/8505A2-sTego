@@ -37,8 +37,8 @@ Example: ` node dcstego.js text.txt ./images/coverImage.bmp secretImage.bmp pass
 
 
 	**Revealing An Image**
-Format: `node dcstego.js  <secretFilePath>`
-Example: `node dcstego.js secretImage.bmp`
+Format: `node dcstego.js  <secretFilePath> <decryptionKey>`
+Example: `node dcstego.js secretImage.bmp password`
 
 
 2. Prompts:
