@@ -2,7 +2,7 @@
   "name": "stego",
   "version": "1.0.0",
   "description": "A stegonography application written in node.js",
-  "main": "index.js",
+  "main": "dcstego.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec"
   },
@@ -18,9 +18,14 @@
   "homepage": "https://github.com/tratnayake/sTego#readme",
   "dependencies": {
     "all-your-base": "^0.3.0",
+    "binary": "^0.3.0",
     "chai": "^3.3.0",
+    "file-size": "^1.0.0",
     "jimp": "^0.2.7",
     "mocha": "^2.3.3",
+    "node-bitarray": "0.0.2",
+    "pad": "^1.0.0",
+    "path": "^0.12.7",
     "prompt": "^0.2.14"
   }
 }

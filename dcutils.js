@@ -12,7 +12,7 @@ var binary = require('binary');
 var BitArray = require('node-bitarray')
 var exports = module.exports;
 var filesize = require("file-size");
-var dcimage = require("dcimage")
+var dcimage = require("./dcimage")
 
 
 
@@ -41,7 +41,7 @@ exports.stegoImage = function(ipp){
 		        if(counter < ipp.writeData.length){
 		        	var pixel = dcimage.prepPixel(red,green,blue);
 		        	//There's still stuff to write in the data.
-		        	console.log("RED to write: " + ipp.writeData[counter]);
+		        	////DEBUG: console.log("RED to write: " + ipp.writeData[counter]);
 		        	pixel.redBinNew = pixel.redBin.slice(0,7) + ipp.writeData[counter];
 		        	var colorInt = ayb.binToDec(pixel.redBinNew);
 		        	this.bitmap.data[idx] = colorInt;
@@ -52,7 +52,7 @@ exports.stegoImage = function(ipp){
 		        if(counter < ipp.writeData.length){
 		        	var pixel = dcimage.prepPixel(red,green,blue);
 		        	//There's still stuff to write in the data.
-		        	console.log("GREEN to write: " + ipp.writeData[counter]);
+		        	////DEBUG: console.log("GREEN to write: " + ipp.writeData[counter]);
 		        	pixel.greenBinNew = pixel.greenBin.slice(0,7) + ipp.writeData[counter];
 		        	var colorInt = ayb.binToDec(pixel.greenBinNew);
 		        	this.bitmap.data[idx+1] = colorInt;
@@ -62,7 +62,7 @@ exports.stegoImage = function(ipp){
 		        if(counter < ipp.writeData.length){
 		        	var pixel = dcimage.prepPixel(red,green,blue);
 		        	//There's still stuff to write in the data.
-		        	console.log("BLUE to write: " + ipp.writeData[counter]);
+		        	////DEBUG: console.log("BLUE to write: " + ipp.writeData[counter]);
 		        	pixel.blueBinNew = pixel.blueBin.slice(0,7) + ipp.writeData[counter];
 		        	var colorInt = ayb.binToDec(pixel.blueBinNew);
 		        	this.bitmap.data[idx+2] = colorInt;
@@ -88,10 +88,10 @@ exports.stegoImage = function(ipp){
 	})
 }
 
-export.revealSecretImage = function(ipp){
+exports.revealSecretImage = function(ipp){
 	return new Promise(function(resolve,reject){
 		ipp.data = new Array();
-		console.log("ProcessSecretImage()");
+		//DEBUG: console.log("ProcessSecretImage()");
 		var image = new Jimp(ipp.secretImageFilePath, function(err,image){
 			image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
 			    // x, y is the position of this pixel on the image 
@@ -103,21 +103,21 @@ export.revealSecretImage = function(ipp){
 			    var blue = this.bitmap.data[idx+2];
 			    var alpha = this.bitmap.data[idx+3];
 			    
-			    var pixel = prepPixel(red,green,blue);
+			    var pixel = dcimage.prepPixel(red,green,blue);
 			    ipp.data.push(pixel.redBin[7]);
 			    ipp.data.push(pixel.greenBin[7]);
 			    ipp.data.push(pixel.blueBin[7]);
 
-			    // console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.redBin);
-			    // console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.greenBin);
-			    // console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.blueBin);
+			    //DEBUG: console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.redBin);
+			    //DEBUG: console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.greenBin);
+			    //DEBUG: console.log(" X: " + x + " Y: " + y  + " with binary: " + pixel.blueBin);
 
 			 
 			    // rgba values run from 0 - 255 
 			    // e.g. this.bitmap.data[idx] = 0; // removes red from this pixel 
 			});
 			ipp.data = ipp.data.join("");
-			//console.log(ipp);
+			//DEBUG:console.log(ipp);
 			var data = ipp.data;
 			//split into 8 bit chucnks
 			var bitArray = data.match(new RegExp('.{1,'+8+'}', 'g'));
@@ -125,11 +125,11 @@ export.revealSecretImage = function(ipp){
 			 var decimalArray = new Array();
 
 			 var testArray = bitArray.slice(0,500);
-			 //console.log(testArray);
+			 //DEBUG: console.log(testArray);
 			 var key = "\n";
 			 var code = key.charCodeAt(0);
 			 code = ayb.decToBin(code);
-			 console.log(code);
+			 //DEBUG:console.log(code);
 
 			 if (code.length < 8){
 				var gap = 8 - code.length;
@@ -137,7 +137,7 @@ export.revealSecretImage = function(ipp){
 			}
 			else{bitKey = code};
 
-			console.log("Bit key is " + bitKey);
+			//DEBUG: console.log("Bit key is " + bitKey);
 			//Hold the locations of the key markers
 			var keyArray = new Array();
 			for (var i = 0; i < testArray.length; i++) {
@@ -152,7 +152,7 @@ export.revealSecretImage = function(ipp){
 			for (var i = 0; i < fileName.length; i++) {
 				fileName[i] = ayb.binToDec(fileName[i])
 			};
-			console.log(fileName);
+			//DEBUG: console.log(fileName);
 			var fileName = String.fromCharCode.apply(String,fileName);
 			console.log("File name is " + fileName);
 
@@ -161,14 +161,14 @@ export.revealSecretImage = function(ipp){
 			for (var i = 0; i < fileSize.length; i++) {
 				fileSize[i] = ayb.binToDec(fileSize[i])
 			};
-			console.log(fileSize);
+			//DEBUG: console.log(fileSize);
 			var fileSize = String.fromCharCode.apply(String,fileSize);
-			console.log("File sizeis " + fileSize +"bytes long");
+			//DEBUG: console.log("File sizeis " + fileSize +"bytes long");
 
 			var start = keyArray[1] + 1;
 			var end  = parseInt(start) + parseInt(fileSize);
-			console.log("Data starts @ " + start);
-			console.log ("Data ends @" +  end);
+			//DEBUG: console.log("Data starts @ " + start);
+			//DEBUG: console.log ("Data ends @" +  end);
 
 			  var fileData =bitArray.slice(start, end);
 			  console.log(fileData);
@@ -177,16 +177,16 @@ export.revealSecretImage = function(ipp){
 			  for (var i = 0; i < fileData.length; i++) {
 			    byteArray.push(ayb.binToDec(fileData[i]));
 			  };
-			  // console.log("byteArray is: " + byteArray);
+			  //DEBUG: console.log("byteArray is: " + byteArray);
 			  //add to buffer
 			  var buff = new Buffer(byteArray);
 			  // console.log(buff);
 
 			   console.log("Write file");
-			  //console.log(ipp);
+			  //DEBUG: console.log(ipp);
 			  fs.writeFileSync('./output/'+fileName,buff,'binary');
-			   console.log("DONE!");
-			   resolve("Finished")
+			   //DEBUG:console.log("DONE!");
+			   resolve('The finished file has been written to: /output/'+fileName)
 
 		})
 
