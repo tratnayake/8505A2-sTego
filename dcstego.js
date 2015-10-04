@@ -152,7 +152,7 @@ function processArgs(){
 		// 	embedFilePath: text.txt,
 		// 	coverFilePath: ./images/coverFile.bmp,
 		// 	outputFileName: secretImage.bmp
-		// }
+		// }	
 
 		var ipp = new Object({embedFilePath: embedFilePath, coverFilePath: coverFilePath, outputFileName: outputFileName, encryptionPassword: encryptionPassword});
 		//DEBUG: console.log(ipp);
@@ -250,23 +250,6 @@ function enforceConstraint(ipp){
 function prepData(ipp){
 	return new Promise(function(resolve,reject){
 		var data = ipp.headerData + ipp.embedFileData;
-		console.log(data);
-		console.log(typeof(data));
-
-		//Encrypt
-		// var cipher = crypto.createCipher(algorithm,password)
-		// var crypted = cipher.update(data,'binary','binary')
-		// crypted += cipher.final('binary');
-		// console.log(crypted);
-		// console.log(typeof(crypted));
-
-
-		//Decrypt
-		// var decipher = crypto.createDecipher(algorithm,password)
-		// var dec = decipher.update(crypted,'binary','binary')
-		// dec += decipher.final('binary');
-		// console.log(dec);
-
 		ipp.writeData = data;
 		//DEBUG: console.log("Write data is");
 		//DEBUG: console.log(ipp.writeData);
